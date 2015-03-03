@@ -52,7 +52,7 @@ do
 
 	# Clean up new lines in current trace run, append to end of file for the output file 
   # For each extra newline in currentTrace, increment NR%#?
-  awk '{ ORS = (NR%10 ? "" : RS) } 1' currentTrace >> prefetcher_run_data.csv
+  awk '{ ORS = (NR%11 ? "" : RS) } 1' currentTrace >> prefetcher_run_data.csv
   rm currentTrace
 done 
 done
