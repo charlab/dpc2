@@ -1,27 +1,24 @@
 # Location of the Prefetchers and traces 
-PREFETCHERS="example_prefetchers/*.c"
+INITIAL_FILE="initial_results.csv"
 TRACES="traces/*.dpc"
+TEST_PREFETCHER_LOCATION=$1
+
 
 # Remove old intermediate files, create new output file
 touch currentTrace
 rm currentTrace
-touch prefetcher_run_data.csv
-rm prefetcher_run_data.csv
-touch prefetcher_run_data.csv
 
-# initial column headers for CSV file 
-# Order of flags here should match the order that they are run below
-echo "benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads" >> prefetcher_run_data.csv
+TEST_PREFETCHER_NAME=$(basename $TEST_PREFETCHER_LOCATION ".c")
+NOW=$(date -u +"%Y-%m-%dT%H:%M:%S")
+NEWFILE=$(TEST_PREFETCHER_NAME)"_"$(NOW)
+touch NEWFILE
+cp INITIAL_FILE NEWFILE
 
-
-# Need to compile each prefetcher separately 
-for prefetcher in $PREFETCHERS
-do
   # pulling prefetcher file name from path 
   currentFile=$(basename $prefetcher ".c")
   echo "Compiling $currentFile file..."
 
-  gcc -Wall -o dpc2sim $prefetcher lib/dpc2sim.a
+  gcc -Wall -o dpc2sim $(TEST_PREFETCHER_LOCATION) lib/dpc2sim.a
 
   # Each prefetcher on each trace, with 4 flag options
   for trace in $TRACES
@@ -52,7 +49,6 @@ do
 
 	# Clean up new lines in current trace run, append to end of file for the output file 
   # For each extra newline in currentTrace, increment NR%#?
-  awk '{ ORS = (NR%11 ? "" : RS) } 1' currentTrace >> prefetcher_run_data.csv
+  awk '{ ORS = (NR%11 ? "" : RS) } 1' currentTrace >> NEWFILE
   rm currentTrace
 done 
-done
