@@ -31,6 +31,9 @@ typedef struct ip_tracker
 
   long int stream;
 
+  long int stream_stride;
+  long int last_stream_stride;
+
   // use LRU to evict old IP trackers
   unsigned long long int lru_cycle;
 } ip_tracker_t;
@@ -42,7 +45,7 @@ void l2_prefetcher_initialize(int cpu_num)
   printf("IP-based Stride Prefetcher\n");
   // you can inspect these knob values from your code to see which configuration you're runnig in
   printf("Knobs visible from prefetcher: %d %d %d\n", knob_scramble_loads, knob_small_llc, knob_low_bandwidth);
-
+	
   int i;
   for(i=0; i<IP_TRACKER_COUNT; i++)
     {
@@ -51,6 +54,8 @@ void l2_prefetcher_initialize(int cpu_num)
       trackers[i].last_stride = 0;
       trackers[i].lru_cycle = 0;
       trackers[i].stream = 0;
+      trackers[i].stream_stride = 0;
+      trackers[i].last_stream_stride = 0;
     }
 }
 
@@ -96,10 +101,13 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
       trackers[tracker_index].last_addr = addr;
       trackers[tracker_index].last_stride = 0;
       trackers[tracker_index].lru_cycle = get_current_cycle(0);
+      trackers[tracker_index].stream = 0;
+      trackers[tracker_index].stream_stride = 0;
+      trackers[tracker_index].last_stream_stride = 0;
 
       return;
     }
-
+    //fprintf(stderr, "%ld\n",trackers[tracker_index].stream);
   // calculate the stride between the current address and the last address
   // this bit appears overly complicated because we're calculating
   // differences between unsigned address variables
@@ -119,51 +127,140 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     {
       return;
     }
-
+ 
   // only do any prefetching if there's a pattern of seeing the same
   // stride more than once
   if(stride == trackers[tracker_index].last_stride)
     {
       // do some prefetching
-
-
+      
+	
       int i, j;
       int k = 0;
-      for(j=0; k<PREFETCH_DEGREE; i++, j++) {
-        for(i=0; i<trackers[tracker_index].stream; i++, k++)
-          {
-            if(k>PREFETCH_DEGREE)
-              break;
-            unsigned long long int pf_address = addr + (j*stride)+(i<<6);
+		
+      if(trackers[tracker_index].stream > 0) {
+	      for(j=0, k=0; k<=PREFETCH_DEGREE; j++) {
 
-            // only issue a prefetch if the prefetch address is in the same 4 KB page 
-            // as the current demand access address
-            if((pf_address>>12) != (addr>>12))
-              {
-                break;
-              }
+			for(i=0; i<=trackers[tracker_index].stream; i++) {
+				k++;
+				
+				if(k>PREFETCH_DEGREE)
+				  break;
+                if(i>1)
+                  break;
 
-            // check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
-            if(get_l2_mshr_occupancy(0) < 8)
-              {
-                l2_prefetch_line(0, addr, pf_address, FILL_L2);
-              }
-            else
-              {
-                l2_prefetch_line(0, addr, pf_address, FILL_LLC);
-              }
-            
-          }
-      }
+				unsigned long long int pf_address = addr + ((j+1)*stride);
+				pf_address = ((pf_address>>6) + i)<<6;
 
-    } else if(addr == trackers[tracker_index].last_stride+1) {
+				// only issue a prefetch if the prefetch address is in the same 4 KB page 
+				// as the current demand access address
+				if((pf_address>>12) != (addr>>12))
+				  {
+				    break;
+				  }
+
+				// check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+				if(get_l2_mshr_occupancy(0) < 8) {
+				    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+				}else{
+				    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+				  }
+				
+			  }
+			}
+	} else {
+	    for(j=0, k=0; k<=PREFETCH_DEGREE; j++) {
+			for(i=0; i>=trackers[tracker_index].stream; i--)
+			  {
+				k++;
+				if(k>PREFETCH_DEGREE)
+				  break;
+                if(i<-1)
+                  break;
+				unsigned long long int pf_address = addr + ((j+1)*stride);
+				pf_address = ((pf_address>>6) + i)<<6;
+
+				// only issue a prefetch if the prefetch address is in the same 4 KB page 
+				// as the current demand access address
+				if((pf_address>>12) != (addr>>12))
+				  {
+				    break;
+				  }
+
+				// check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+				if(get_l2_mshr_occupancy(0) < 8)
+				  {
+				    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+				  }
+				else
+				  {
+				    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+				  }
+				
+			  }
+		}
+	}
+
+    } else if((addr>>6) == ((trackers[tracker_index].last_addr>>6) + 1)) {
         stride = trackers[tracker_index].last_stride; //dont want to override stride if streaming
+        if(trackers[tracker_index].stream < 0)
+            trackers[tracker_index].stream = 0;
         trackers[tracker_index].stream += 1;
-    } else if(addr == trackers[tracker_index].last_stride-1) {
-        stride = trackers[tracker_index].last_stride; //dont want to override stride if streaming
-        trackers[tracker_index].stream -= 1;
-    }
+        
 
+	    for(i=0; i<trackers[tracker_index].stream; i++) {
+		    unsigned long long int pf_address = addr + (i*64);
+
+                if(i>PREFETCH_DEGREE)
+				  break;
+
+                // only issue a prefetch if the prefetch address is in the same 4 KB page 
+                // as the current demand access address
+                if((pf_address>>12) != (addr>>12))
+                  {
+                    break;
+                  }
+
+                // check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+                if(get_l2_mshr_occupancy(0) < 8)
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+                  }
+                else
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+                  }
+	    }
+    } else if((addr>>6) == ((trackers[tracker_index].last_addr>>6) - 1)) {
+        stride = trackers[tracker_index].last_stride; //dont want to override stride if streaming
+        if(trackers[tracker_index].stream > 0)
+            trackers[tracker_index].stream = 0;
+        trackers[tracker_index].stream -= 1;
+	    for(i=0; i>trackers[tracker_index].stream; i--) {
+		    unsigned long long int pf_address = addr + (i*64);
+
+                if((-1*i)>PREFETCH_DEGREE)
+				  break;
+
+                // only issue a prefetch if the prefetch address is in the same 4 KB page 
+                // as the current demand access address
+                if((pf_address>>12) != (addr>>12))
+                  {
+                    break;
+                  }
+
+                // check the MSHR occupancy to decide if we're going to prefetch to the L2 or LLC
+                if(get_l2_mshr_occupancy(0) < 8)
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_L2);
+                  }
+                else
+                  {
+                    l2_prefetch_line(0, addr, pf_address, FILL_LLC);
+                  }
+	    }
+    }
+    
   trackers[tracker_index].last_addr = addr;
   trackers[tracker_index].last_stride = stride;
 }
