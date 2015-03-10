@@ -7,7 +7,9 @@
 
 # Location of the Prefetchers and traces 
 INITIAL_FILE="../data/initial_results.csv"
-TRACES="../dpc2sim/traces/*.dpc"
+
+# THIS is THE LOCATION OF THE OLD TRACES, NOT COMMITED ON GITHUB
+TRACES="../../dpc2simOLD/traces/*.dpc"
 TEST_PREFETCHER_LOCATION=$1
 echo $1
 
@@ -19,13 +21,13 @@ rm currentTrace
 # Current file has date + prefetcher name, iso format 
 TEST_PREFETCHER_NAME=$(basename $TEST_PREFETCHER_LOCATION ".c")
 NOW=$(date -u +"%Y-%m-%dT%H:%M:%S")
-NEWFILE=$TEST_PREFETCHER_NAME"_"$NOW".csv"
-cp $INITIAL_FILE data/$NEWFILE
+NEWFILE="../data/"$TEST_PREFETCHER_NAME"_"$NOW".csv"
+cp $INITIAL_FILE $NEWFILE
 
 # Start with a newline 
 echo "" >> $NEWFILE
 
-gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION lib/dpc2sim.a
+gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
 
 # Each prefetcher on each trace, with 4 flag options
 for trace in $TRACES
