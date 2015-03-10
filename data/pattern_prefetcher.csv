@@ -1,12 +1,12 @@
 benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads
-GemsFDTD_trace2,pattern_prefetcher,3.448241,3.448241,3.422175,3.415211
-gcc_trace2,pattern_prefetcher,0.305936,0.309471,0.186424,0.302485
-lbm_trace2,pattern_prefetcher,1.443829,1.338552,0.861773,1.452633
-leslie3d_trace2,pattern_prefetcher,1.345888,1.25039,0.709584,1.288554
-libquantum_trace2,pattern_prefetcher,3.215806,3.215806,3.16502,3.216567
-mcf_trace2,pattern_prefetcher,0.352165,0.237989,0.228018,0.356417
-milc_trace2,pattern_prefetcher,1.10702,1.04114,0.608782,1.010429
-omnetpp_trace2,pattern_prefetcher,2.216154,1.470893,1.82731,2.273943
+GemsFDTD_trace2.dpc,ampm_lite_prefetcher.c,3.300108,3.300108,3.275035,3.201842
+gcc_trace2.dpc,ampm_lite_prefetcher.c,0.310416,0.308576,0.177316,0.309429
+lbm_trace2.dpc,ampm_lite_prefetcher.c,1.545331,1.349003,0.920716,1.525312
+leslie3d_trace2.dpc,ampm_lite_prefetcher.c,0.856729,0.797234,0.635534,0.843303
+libquantum_trace2.dpc,ampm_lite_prefetcher.c,3.270776,3.270776,3.15056,3.27735
+mcf_trace2.dpc,ampm_lite_prefetcher.c,0.367119,0.242557,0.222575,0.370201
+milc_trace2.dpc,ampm_lite_prefetcher.c,1.47817,1.416061,0.607796,1.476242
+omnetpp_trace2.dpc,ampm_lite_prefetcher.c,2.276288,1.529286,1.834017,2.207998
 GemsFDTD_trace2,pattern_prefetcher PD5,3.449058,3.449058,3.421521,3.416404
 gcc_trace2,pattern_prefetcher PD5,0.311298,0.314234,0.183738,0.308266
 lbm_trace2,pattern_prefetcher PD5,1.833061,1.688443,0.977944,1.814202
