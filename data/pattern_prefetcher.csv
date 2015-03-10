@@ -15,8 +15,8 @@ libquantum_trace2,pattern_prefetcher PD5,3.256786,3.256786,3.230428,3.256673
 mcf_trace2,pattern_prefetcher PD5,0.352089,0.237872,0.223791,0.356386
 milc_trace2,pattern_prefetcher PD5,1.17991,1.108452,0.617477,1.065257
 omnetpp_trace2,pattern_prefetcher PD5,2.227381,1.473457,1.8344,2.278759
-gcc_trace2,ampm_lite_prefetcher PD 5,0.336173,0.339412,0.178563,0.336649
 GemsFDTD_trace2,ampm_lite_prefetcher PD 5,3.452123,3.452123,3.420196,3.423407
+gcc_trace2,ampm_lite_prefetcher PD 5,0.336173,0.339412,0.178563,0.336649
 lbm_trace2,ampm_lite_prefetcher PD 5,2.019524,1.787965,0.972468,2.009622
 leslie3d_trace2,ampm_lite_prefetcher PD 5,1.622357,1.476426,0.729887,1.592486
 libquantum_trace2,ampm_lite_prefetcher PD 5,3.268748,3.268748,3.197798,3.268696
