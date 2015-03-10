@@ -7,3 +7,11 @@ libquantum_trace2,pattern_prefetcher,3.215806,3.215806,3.16502,3.216567
 mcf_trace2,pattern_prefetcher,0.352165,0.237989,0.228018,0.356417
 milc_trace2,pattern_prefetcher,1.10702,1.04114,0.608782,1.010429
 omnetpp_trace2,pattern_prefetcher,2.216154,1.470893,1.82731,2.273943
+GemsFDTD_trace2,pattern_prefetcher PD5,3.449058,3.449058,3.421521,3.416404
+gcc_trace2,pattern_prefetcher PD5,0.311298,0.314234,0.183738,0.308266
+lbm_trace2,pattern_prefetcher PD5,1.833061,1.688443,0.977944,1.814202
+leslie3d_trace2,pattern_prefetcher PD5,1.484671,1.357682,0.724747,1.462406
+libquantum_trace2,pattern_prefetcher PD5,3.256786,3.256786,3.230428,3.256673
+mcf_trace2,pattern_prefetcher PD5,0.352089,0.237872,0.223791,0.356386
+milc_trace2,pattern_prefetcher PD5,1.17991,1.108452,0.617477,1.065257
+omnetpp_trace2,pattern_prefetcher PD5,2.227381,1.473457,1.8344,2.278759
