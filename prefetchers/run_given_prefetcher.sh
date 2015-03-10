@@ -7,7 +7,7 @@
 
 # Location of the Prefetchers and traces 
 INITIAL_FILE="../data/initial_results.csv"
-TRACES="../traces/*.dpc"
+TRACES="../dpc2sim/traces/*.dpc"
 TEST_PREFETCHER_LOCATION=$1
 echo $1
 
