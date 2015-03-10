@@ -1,9 +1,0 @@
-benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads
-GemsFDTD_trace2,pattern_prefetcher,3.448241,3.448241,3.422175,3.415211
-gcc_trace2,pattern_prefetcher,0.305936,0.309471,0.186424,0.302485
-lbm_trace2,pattern_prefetcher,1.443829,1.338552,0.861773,1.452633
-leslie3d_trace2,pattern_prefetcher,1.345888,1.25039,0.709584,1.288554
-libquantum_trace2,pattern_prefetcher,3.215806,3.215806,3.16502,3.216567
-mcf_trace2,pattern_prefetcher,0.352165,0.237989,0.228018,0.356417
-milc_trace2,pattern_prefetcher,1.10702,1.04114,0.608782,1.010429
-omnetpp_trace2,pattern_prefetcher,2.216154,1.470893,1.82731,2.273943
