@@ -25,7 +25,7 @@ NEWFILE="../data/"$TEST_PREFETCHER_NAME"_"$NOW".csv"
 cp $INITIAL_FILE $NEWFILE
 
 # Start with a newline 
-echo "" >> $NEWFILE
+printf "" >> $NEWFILE
 
 gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
 
