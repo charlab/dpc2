@@ -39,3 +39,14 @@
 hit under miss 
 optimization for cache
 how many misses you can have at a time-->
+
+
+## Thursday, March 12th (Jean and Sebastian)
+
+* We met to work on the MPC and were able to implement a prototype version pretty quickly
+* Notice that the IPC value is very trace dependent, for example: a threshold of 0.92 gave us IPC of 0.34 for gcc and 3.44 for GEMS
+* next step: want to try many experiments
+	* vary prefetch low/high degree (5, 10)
+	* the threshold percent
+<!--translates to misses per cycle 0.92 in gcc case
+-->
