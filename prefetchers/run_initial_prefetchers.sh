@@ -4,7 +4,7 @@
 
 # Location of the Prefetchers and traces 
 PREFETCHERS="../dpc2sim/example_prefetchers/*.c"
-TRACES="../dpc2sim/traces/*.dpc"
+TRACES="../dpc2simOLD/traces/*.dpc"
 
 # Remove old intermediate files, create new output file
 touch currentTrace
