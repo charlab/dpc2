@@ -18,6 +18,8 @@
 
 #define IP_TRACKER_COUNT 1024
 #define PREFETCH_DEGREE 5
+#define PREFETCH_DEGREE_HIGH 10
+#define THRESHOLD 0.92
 
 typedef struct ip_tracker
 {
@@ -36,6 +38,9 @@ typedef struct ip_tracker
 
   // use LRU to evict old IP trackers
   unsigned long long int lru_cycle;
+
+    unsigned long int miss;
+    unsigned long long int cycle_num;
 } ip_tracker_t;
 
 ip_tracker_t trackers[IP_TRACKER_COUNT];
@@ -56,6 +61,8 @@ void l2_prefetcher_initialize(int cpu_num)
       trackers[i].stream = 0;
       trackers[i].stream_stride = 0;
       trackers[i].last_stream_stride = 0;
+        trackers[i].miss = 0;
+        trackers[i].cycle_num = 0;
     }
 }
 
@@ -104,6 +111,8 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
       trackers[tracker_index].stream = 0;
       trackers[tracker_index].stream_stride = 0;
       trackers[tracker_index].last_stream_stride = 0;
+        trackers[tracker_index].miss = 0;
+        trackers[tracker_index].cycle_num = 0;
 
       return;
     }
@@ -111,6 +120,20 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
   // calculate the stride between the current address and the last address
   // this bit appears overly complicated because we're calculating
   // differences between unsigned address variables
+    trackers[tracker_index].miss += (1-cache_hit);
+    trackers[tracker_index].cycle_num += 1;
+
+    int prefetch_degree_used;
+    float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
+    if(MPC > THRESHOLD) {
+         prefetch_degree_used = PREFETCH_DEGREE_HIGH;
+    } else {
+        prefetch_degree_used = PREFETCH_DEGREE;
+    }
+    
+    printf("MISSES_PER_CYCLE: %f\n", MPC);
+    //printf("Misses: %ld\nCycles: %lld\n\n", trackers[tracker_index].miss,trackers[tracker_index].cycle_num);
+
   long long int stride = 0;
   if(addr > trackers[tracker_index].last_addr)
     {
@@ -139,12 +162,12 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
       int k = 0;
 		
       if(trackers[tracker_index].stream > 0) {
-	      for(j=0, k=0; k<=PREFETCH_DEGREE; j++) {
+	      for(j=0, k=0; k<=prefetch_degree_used; j++) {
 
 			for(i=0; i<=trackers[tracker_index].stream; i++) {
 				k++;
 				
-				if(k>PREFETCH_DEGREE)
+				if(k>prefetch_degree_used)
 				  break;
                 if(i>1)
                   break;
@@ -169,11 +192,11 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 			  }
 			}
 	} else {
-	    for(j=0, k=0; k<=PREFETCH_DEGREE; j++) {
+	    for(j=0, k=0; k<=prefetch_degree_used; j++) {
 			for(i=0; i>=trackers[tracker_index].stream; i--)
 			  {
 				k++;
-				if(k>PREFETCH_DEGREE)
+				if(k>prefetch_degree_used)
 				  break;
                 if(i<-1)
                   break;
@@ -211,7 +234,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 	    for(i=0; i<trackers[tracker_index].stream; i++) {
 		    unsigned long long int pf_address = addr + (i*64);
 
-                if(i>PREFETCH_DEGREE)
+                if(i>prefetch_degree_used)
 				  break;
 
                 // only issue a prefetch if the prefetch address is in the same 4 KB page 
@@ -239,7 +262,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 	    for(i=0; i>trackers[tracker_index].stream; i--) {
 		    unsigned long long int pf_address = addr + (i*64);
 
-                if((-1*i)>PREFETCH_DEGREE)
+                if((-1*i)>prefetch_degree_used)
 				  break;
 
                 // only issue a prefetch if the prefetch address is in the same 4 KB page 
