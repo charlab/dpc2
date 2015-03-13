@@ -4,13 +4,13 @@
 
 # Location of the Prefetchers and traces 
 PREFETCHERS="../dpc2sim/example_prefetchers/*.c"
-TRACES="../dpc2simOLD/traces/*.dpc"
+TRACES="../../dpc2simOLD/traces/*.dpc"
 
 # Remove old intermediate files, create new output file
 touch currentTrace
 rm currentTrace
 NOW=$(date -u +"%Y-%m-%dT%H:%M:%S")
-NEWFILE="initial_results_"$NOW".csv"
+NEWFILE="../data/initial_results_"$NOW".csv"
 
 
 # initial column headers for CSV file 
