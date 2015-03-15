@@ -50,3 +50,15 @@ how many misses you can have at a time-->
 	* the threshold percent
 <!--translates to misses per cycle 0.92 in gcc case
 -->
+
+## Friday, March 13th (team meeting)
+* based on the results from yesterday, we are moving forward with experiments (good spring break work)
+* we want to vary: high degree/low degree of prefetching and the threshold
+* data points for varying the low degree (the number represents the amount relegated to the lower degree of prefetching): 0, 25, 50, 60, 70, 80, 90, 100
+* data points for the pairs of prefetching: 1 and 3, 4 and 7, 8 and 10,
+* we are using these few data points at first to make sure we can finish running during spring break and also gives us a chance to zoom in on the results and then decide where the optimal space/solution might be (we are NOT expecting weird behavior where the optimal solution is hidden among really bad data points)
+
+| Person | Task |
+|:-------|:-----|
+| Jean | add extra columns to the results csv for the pattern prefetcher (threshold percent, low prefetch degree, high prefetch degree),  more work on shell scripts, add a sum column for the initial results |
+|  Sebastian | update pattern prefetch c file  |
