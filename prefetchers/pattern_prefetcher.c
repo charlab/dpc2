@@ -173,7 +173,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     //float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
     float thresh;
     thresh = (float)(IP_TRACKER_COUNT)*100/percent;
-    if(tracker_index > thresh) {
+    if(tracker_index < thresh) {
          prefetch_degree_used = prefetch_low;
     } else {
         prefetch_degree_used = prefetch_high;
