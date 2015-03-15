@@ -122,17 +122,59 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
   // differences between unsigned address variables
     trackers[tracker_index].miss += (1-cache_hit);
     trackers[tracker_index].cycle_num += 1;
-
-    int prefetch_degree_used;
-    float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
-    if(MPC > THRESHOLD) {
-         prefetch_degree_used = PREFETCH_DEGREE_HIGH;
-    } else {
-        prefetch_degree_used = PREFETCH_DEGREE;
-    }
     
     printf("MISSES_PER_CYCLE: %f\n", MPC);
     //printf("Misses: %ld\nCycles: %lld\n\n", trackers[tracker_index].miss,trackers[tracker_index].cycle_num);
+
+    //really bad bubble sort alogirthm, but we can't write other functions so this is easiest to do
+    int temp, temp2;
+    for(temp = 0; temp<IP_TRACKER_COUNT; temp++) {
+    	for(temp2 = 0; temp2<(IP_TRACKER_COUNT-temp); temp2++) {
+    		if((float)trackers[temp].miss/trackers[temp].cycle_num > (float)trackers[temp2].miss/trackers[temp2].cycle_num)) {
+    			ip_tracker_t temp_struct = trackers[temp];
+    			trackers[temp] = trackers[temp2];
+    			trackers[temp2] = temp_struct;
+    			
+    			//sorting will mess up tracker_index, have to keep it updated with current position
+    			if(temp == tracker_index){ 
+    				tracker_index = temp2;
+    			} else if(temp2 == tracker_index) {
+    				tracker_index = temp;
+    			}
+    		}
+    	}
+    }
+    
+    int percent = 100;
+    int prefetch_low = 5;
+    int prefetch_high = 10;
+    char line[80];
+    
+    File* fd = fopen("tests.csv", "rt");
+    while(fgets(line, 80, fd) != NULL)
+   {
+	 /* get a line, up to 80 chars from fd.  done if NULL */
+	 sscanf (line, "%ld", &elapsed_seconds);
+   }
+   fclose(fr);  /* close the file prior to exiting the routine */
+    fprint("Line: %ld\n", line);
+    //convert line of text to data
+    percent = (line[0]-'0')*100 + (line[1]-'0')*10+(line[2]-'0');
+    prefetch_low = (line[4]-'0')*100 + (line[5]-'0')*10+(line[6]-'0');
+    prefetch_high = (line[8]-'0')*100 + (line[9]-'0')*10+(line[10]-'0');
+    frpint("Percent: %d\n", percent);
+    frpint("P_low: %d\n", prefetch_low);
+    frpint("P_high: %d\n", prefetch_high);
+    
+    int prefetch_degree_used;
+    //float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
+    float thresh;
+    thresh = float(IP_TRACKER_COUNT)*100/percent;
+    if(tracker_index > thresh) {
+         prefetch_degree_used = prefetch_low;
+    } else {
+        prefetch_degree_used = prefetch_high;
+    }
 
   long long int stride = 0;
   if(addr > trackers[tracker_index].last_addr)
