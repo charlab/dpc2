@@ -62,3 +62,4 @@ how many misses you can have at a time-->
 |:-------|:-----|
 | Jean | add extra columns to the results csv for the pattern prefetcher (threshold percent, low prefetch degree, high prefetch degree),  more work on shell scripts, add a sum column for the initial results |
 |  Sebastian | update pattern prefetch c file  |
+| Josef | initial draft of paper |
