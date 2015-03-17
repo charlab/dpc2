@@ -8,7 +8,7 @@
 # Location of the Prefetchers and traces 
 #INITIAL_FILE="../data/initial_results.csv"
 
-CONFIG_FILE="all_config.csv"
+CONFIG_FILE="all_config6.csv"
 
 # THIS is THE LOCATION OF THE OLD TRACES, NOT COMMITED ON GITHUB
 TRACES="../../dpc2simOLD/traces/*.dpc"
@@ -17,8 +17,8 @@ echo "working on prefetcher: "$1
 
 
 # Remove old intermediate files, create new output file
-touch currentTrace
-rm currentTrace
+touch currentTrace6
+rm currentTrace6
 
 # Current file has date + prefetcher name, iso format 
 TEST_PREFETCHER_NAME=$(basename $TEST_PREFETCHER_LOCATION ".c")
@@ -35,9 +35,9 @@ gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
 # each configuration setting 
 while read currentLine;
   do 
-  # Pipe current line into the test_line.csv file
-  rm test_line.csv
-  echo $currentLine > test_line.csv
+  # Pipe current line into the test_line6.csv file
+  rm test_line6.csv
+  echo $currentLine > test_line6.csv
   echo "current configuration: "$currentLine
 
   # Parse current line's configurations in to variables 
@@ -52,47 +52,47 @@ while read currentLine;
   for trace in $TRACES
     do
     # create new temp file
-    touch currentTrace 
+    touch currentTrace6 
 
     # Pull trace file name from path 
     traceName=$(basename $trace ".dpc")
     echo "Working on $traceName ... "
     # add to trace, prefetcher labels temp file 
-    echo -ne $traceName | sed -e "\$a,"  >> currentTrace
-    echo -ne $TEST_PREFETCHER_NAME | sed -e "\$a," >> currentTrace
+    echo -ne $traceName | sed -e "\$a,"  >> currentTrace6
+    echo -ne $TEST_PREFETCHER_NAME | sed -e "\$a," >> currentTrace6
 
     echo "Flag: NONE"
     # Each line: run executable, fetch last number, append, append to current file 
-    cat $trace | ./dpc2sim | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace
+    cat $trace | ./dpc2sim | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace6
 
     echo  "Flag: small_llc"
-    cat  $trace | ./dpc2sim  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace
+    cat  $trace | ./dpc2sim  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace6
 
     echo "Flag: low_bandwidth"
-    cat  $trace | ./dpc2sim  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace
+    cat  $trace | ./dpc2sim  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace6
 
     echo  "Flag: scramble_loads"
-    cat $trace | ./dpc2sim  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace
+    cat $trace | ./dpc2sim  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace6
 
     # Calculate the sum
-    # Takes the currentTrace file, prints even lines (to get rid of commas)
+    # Takes the currentTrace6 file, prints even lines (to get rid of commas)
     # removes top line (name of the trace)
     # sums up all of the numbers 
     # adds comma!
-    cat currentTrace | awk 'NR % 2' | tail -n +2  | awk '{s+=$1} END {print s}' | sed -e "\$a," >> currentTrace
+    cat currentTrace6 | awk 'NR % 2' | tail -n +2  | awk '{s+=$1} END {print s}' | sed -e "\$a," >> currentTrace6
 
 
     # Write the current settings to the csv file 
-    echo -ne $THRESHOLD | sed -e "\$a," >> currentTrace
-    echo -ne $LOW_DEGREE | sed -e "\$a," >> currentTrace
+    echo -ne $THRESHOLD | sed -e "\$a," >> currentTrace6
+    echo -ne $LOW_DEGREE | sed -e "\$a," >> currentTrace6
     # No comma on the last line
-    echo -ne $HIGH_DEGREE >> currentTrace
+    echo -ne $HIGH_DEGREE >> currentTrace6
 
 
     # Clean up new lines in current trace run, append to end of file for the output file 
-    # For each extra newline in currentTrace, increment NR%#?
+    # For each extra newline in currentTrace6, increment NR%#?
     #Number of columns + 8
-    awk '{ ORS = (NR%19? "" : RS) } 1' currentTrace >> $NEWFILE
-    rm currentTrace
+    awk '{ ORS = (NR%19? "" : RS) } 1' currentTrace6 >> $NEWFILE
+    rm currentTrace6
     done 
 done <$CONFIG_FILE
