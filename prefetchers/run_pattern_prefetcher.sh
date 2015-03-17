@@ -8,7 +8,7 @@
 # Location of the Prefetchers and traces 
 #INITIAL_FILE="../data/initial_results.csv"
 
-CONFIG_FILE="all_config.csv"
+CONFIG_FILE="all_config2.csv"
 
 # THIS is THE LOCATION OF THE OLD TRACES, NOT COMMITED ON GITHUB
 TRACES="../../dpc2simOLD/traces/*.dpc"
