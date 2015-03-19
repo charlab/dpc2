@@ -1,4 +1,6 @@
-gcc_trace2
+mcf_trace2
 ,
 pattern_prefetcher
+,
+0.338620
 ,
