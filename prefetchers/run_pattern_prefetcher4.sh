@@ -30,13 +30,13 @@ NEWFILE="../data/"$TEST_PREFETCHER_NAME"_"$NOW".csv"
 # Order of flags here should match the order that they are run below
 echo "benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads,sum,threshold,low_degree,high_degree" >> $NEWFILE
 
-gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
+gcc -Wall -o dpc2sim4 $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
 
 # each configuration setting 
 while read currentLine;
   do 
   # Pipe current line into the test_line4.csv file
-  rm test_line41.csv
+  rm test_line4.csv
   echo $currentLine > test_line4.csv
   echo "current configuration: "$currentLine
 
@@ -63,16 +63,16 @@ while read currentLine;
 
     echo "Flag: NONE"
     # Each line: run executable, fetch last number, append, append to current file 
-    cat $trace | ./dpc2sim | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace4
+    cat $trace | ./dpc2sim4 | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace4
 
     echo  "Flag: small_llc"
-    cat  $trace | ./dpc2sim  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace4
+    cat  $trace | ./dpc2sim4  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace4
 
     echo "Flag: low_bandwidth"
-    cat  $trace | ./dpc2sim  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace4
+    cat  $trace | ./dpc2sim4  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace4
 
     echo  "Flag: scramble_loads"
-    cat $trace | ./dpc2sim  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace4
+    cat $trace | ./dpc2sim4  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace4
 
     # Calculate the sum
     # Takes the currentTrace4 file, prints even lines (to get rid of commas)

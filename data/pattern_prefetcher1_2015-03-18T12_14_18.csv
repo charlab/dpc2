@@ -1,0 +1,11 @@
+benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads,sum,threshold,low_degree,high_degree
+GemsFDTD_trace2,pattern_prefetcher1,3.294615,3.294615,3.268504,3.191922,13.0497,000,01,03
+lbm_trace2,pattern_prefetcher1,1.484771,1.308828,0.904495,1.476786,5.17488,000,01,03
+leslie3d_trace2,pattern_prefetcher1,0.802582,0.750671,0.584013,0.827981,2.96525,000,01,03
+libquantum_trace2,pattern_prefetcher1,3.286590,3.286590,3.183620,3.286593,13.0434,000,01,03
+mcf_trace2,pattern_prefetcher1,0.354861,0.237900,0.224266,0.357147,1.17417,000,01,03
+milc_trace2,pattern_prefetcher1,1.004869,0.984407,0.575178,0.912691,3.47715,000,01,03
+omnetpp_trace2,pattern_prefetcher1,2.216392,1.471326,1.800173,2.156644,7.64453,000,01,03
+GemsFDTD_trace2,pattern_prefetcher1,3.295757,3.295757,3.270808,3.200738,13.0631,000,04,07
+lbm_trace2,pattern_prefetcher1,1.730866,1.509283,0.938413,1.706331,5.88489,000,04,07
+leslie3d_trace2,pattern_prefetcher1,0.885984,0.818922,0.601326,0.914644,3.22088,000,04,07

@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include "../inc/prefetcher.h"
 
-#define IP_TRACKER_COUNT 256
+#define IP_TRACKER_COUNT 1024
 #define PREFETCH_DEGREE 5
 #define PREFETCH_DEGREE_HIGH 10
 #define THRESHOLD 0.92
@@ -130,16 +130,16 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     int temp, temp2;
     for(temp = 0; temp<IP_TRACKER_COUNT; temp++) {
     	for(temp2 = 0; temp2<(IP_TRACKER_COUNT-temp); temp2++) {
-    		if( ((float)trackers[temp2].miss/(float)trackers[temp2].cycle_num) > ((float)trackers[temp2+1].miss/(float)trackers[temp2+1].cycle_num)) {
-    			ip_tracker_t temp_struct = trackers[temp2];
-    			trackers[temp2] = trackers[temp2+1];
-    			trackers[temp2+1] = temp_struct;
+    		if( ((float)trackers[temp].miss/(float)trackers[temp].cycle_num) > ((float)trackers[temp2].miss/(float)trackers[temp2].cycle_num)) {
+    			ip_tracker_t temp_struct = trackers[temp];
+    			trackers[temp] = trackers[temp2];
+    			trackers[temp2] = temp_struct;
     			
     			//sorting will mess up tracker_index, have to keep it updated with current position
-    			if(temp2 == tracker_index){ 
-    				tracker_index = temp2+1;
-    			} else if((temp2+1) == tracker_index) {
+    			if(temp == tracker_index){ 
     				tracker_index = temp2;
+    			} else if(temp2 == tracker_index) {
+    				tracker_index = temp;
     			}
     		}
     	}
@@ -151,7 +151,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     char line[80];
     
     FILE *fd;
-    fd = fopen("test_line.csv", "rt");
+    fd = fopen("test_line2.csv", "rt");
     long int elapsed_seconds;
     while(fgets(line, 80, fd) != NULL)
    {
@@ -172,16 +172,13 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     int prefetch_degree_used;
     //float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
     float thresh;
-    thresh = ((float)(IP_TRACKER_COUNT)*percent)/100.0;
-    int comp;
+    thresh = ((float)(IP_TRACKER_COUNT)*percent)/100;
     if(tracker_index < thresh) {
          prefetch_degree_used = prefetch_low;
-        comp = 1;
     } else {
         prefetch_degree_used = prefetch_high;
-        comp = 0;
     }
-    printf("%f\n%d\n%d\n", thresh, tracker_index, comp);
+
   long long int stride = 0;
   if(addr > trackers[tracker_index].last_addr)
     {
