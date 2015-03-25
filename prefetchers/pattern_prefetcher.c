@@ -16,10 +16,11 @@
 #include <stdio.h>
 #include "../inc/prefetcher.h"
 
-#define IP_TRACKER_COUNT 256
+#define IP_TRACKER_COUNT 128
 #define PREFETCH_DEGREE 5
 #define PREFETCH_DEGREE_HIGH 10
 #define THRESHOLD 0.92
+#define STREAM_DEPTH 2
 
 typedef struct ip_tracker
 {
@@ -173,13 +174,10 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     //float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
     float thresh;
     thresh = ((float)(IP_TRACKER_COUNT)*percent)/100.0;
-    int comp;
     if(tracker_index < thresh) {
          prefetch_degree_used = prefetch_low;
-        comp = 1;
     } else {
         prefetch_degree_used = prefetch_high;
-        comp = 0;
     }
     printf("%f\n%d\n%d\n", thresh, tracker_index, comp);
   long long int stride = 0;
@@ -217,7 +215,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 				
 				if(k>prefetch_degree_used)
 				  break;
-                if(i>1)
+                if(i>STREAM_DEPTH)
                   break;
 
 				unsigned long long int pf_address = addr + ((j+1)*stride);
@@ -246,7 +244,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 				k++;
 				if(k>prefetch_degree_used)
 				  break;
-                if(i<-1)
+                if(i<-STREAM_DEPTH)
                   break;
 				unsigned long long int pf_address = addr + ((j+1)*stride);
 				pf_address = ((pf_address>>6) + i)<<6;
