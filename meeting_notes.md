@@ -63,3 +63,28 @@ how many misses you can have at a time-->
 | Jean | add extra columns to the results csv for the pattern prefetcher (threshold percent, low prefetch degree, high prefetch degree),  more work on shell scripts, add a sum column for the initial results |
 |  Sebastian | update pattern prefetch c file  |
 | Josef | initial draft of paper |
+
+## Tuesday, March 24th (team meeting)
+
+* next step is to try more runs
+	* saving 50 of  most common instructions 
+	* do more close analysis on the lowering range for the percentage (0-50)
+	* instead: if you are doing poorly prefetch more
+	* now: if you are common + doing well: prefetch less
+	* if you are rare + doing well: prefetch even less
+	* if you are common + doing poorly: prefetch more 
+	* if you are rare + doing poorly: prefetch less or even less 
+* Final Push timeline: 
+	*  for this Friday: finishing running prefetcher on existing traces
+	* Friday meeting: convene and do data analysis to find the optimal solution (data analysis and stitching)
+	* this weekend: run prefetcher on Andrew's traces
+	* next week (last week): paper writing! 
+
+
+| Person | Task |
+|:-------|:-----|
+| Jean | add in new parameter for script, stitch together original data, review code for bugs and style   |
+|  Sebastian | update pattern prefetch c file for new parameters, run the prefetcher   |
+| Andrew | more traces, review code for bugs and style| 
+| Josef | draft of paper |
+
