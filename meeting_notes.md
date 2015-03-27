@@ -88,3 +88,30 @@ how many misses you can have at a time-->
 | Andrew | more traces, review code for bugs and style| 
 | Josef | draft of paper |
 
+
+
+## Friday, March 27th
+
+* At this meeting, we realized we did not end up having the data run yet
+* Sebastian did update the pattern prefetcher
+* Andrew came up with several new traces
+
+| Person | Task |
+|:-------|:-----|
+| Jean | update the scripts, update the test_line files for 8 piecewise, run the initial ones again |
+|  Sebastian | run the actual tests  |
+| Andrew | run the traces on all of the prefetchers|
+
+* every needs to do debugging, preferably today because we are going to run tests soon
+* looking forward to the final paper: 
+
+| Section | Person |
+|:--------| :-------|
+| Background | Andrew |
+| Prefetcher | Sebastian |
+| Traces | Andrew |
+| Results | Jean | 
+
+
+Top priority: make sure the code is bug free by 3am tonight (when the tests will start running)
+
