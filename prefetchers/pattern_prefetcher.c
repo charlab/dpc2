@@ -184,7 +184,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     	}
     }
     
-    int percent1 = 50;
+    int percent = 50;
     int prefetch_low = 1;
     int prefetch_standard = 5;
     int prefetch_high = 10;
