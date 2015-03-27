@@ -21,6 +21,7 @@
 #define PREFETCH_DEGREE_HIGH 10
 #define THRESHOLD 0.92
 #define STREAM_DEPTH 2
+#define COMMON_COUNT 50
 
 typedef struct ip_tracker
 {
@@ -46,6 +47,13 @@ typedef struct ip_tracker
 
 ip_tracker_t trackers[IP_TRACKER_COUNT];
 
+struct common_counter {
+    unsigned long int miss;
+    unsigned long long int cycle_num;
+}
+
+common_counter MPC[COMMON_COUNT];
+
 void l2_prefetcher_initialize(int cpu_num)
 {
   printf("IP-based Stride Prefetcher\n");
@@ -55,15 +63,19 @@ void l2_prefetcher_initialize(int cpu_num)
   int i;
   for(i=0; i<IP_TRACKER_COUNT; i++)
     {
-      trackers[i].ip = 0;
-      trackers[i].last_addr = 0;
-      trackers[i].last_stride = 0;
-      trackers[i].lru_cycle = 0;
-      trackers[i].stream = 0;
-      trackers[i].stream_stride = 0;
-      trackers[i].last_stream_stride = 0;
+        trackers[i].ip = 0;
+        trackers[i].last_addr = 0;
+        trackers[i].last_stride = 0;
+        trackers[i].lru_cycle = 0;
+        trackers[i].stream = 0;
+        trackers[i].stream_stride = 0;
+        trackers[i].last_stream_stride = 0;
         trackers[i].miss = 0;
         trackers[i].cycle_num = 0;
+        if(i < COMMON_COUNT) {
+            MPC[i].miss = 0;
+            MPC[i].cycles = 0;
+        }
     }
 }
 
@@ -127,12 +139,18 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     //printf("MISSES_PER_CYCLE: %f\n", MPC);
     //printf("Misses: %ld\nCycles: %lld\n\n", trackers[tracker_index].miss,trackers[tracker_index].cycle_num);
 
-    //really bad bubble sort alogirthm, but we can't write other functions so this is easiest to do
+    //really bad bubble sort algorithm, but we can't write other functions so this is easiest to do
     int temp, temp2;
+    
+    
+    ip_tracker_t trackers_temp[IP_TRACKER_COUNT];
+    trackers_temp = trackers;
+
+    //sort by cycles then keep top 50 elements
     for(temp = 0; temp<IP_TRACKER_COUNT; temp++) {
     	for(temp2 = 0; temp2<(IP_TRACKER_COUNT-temp); temp2++) {
-    		if( ((float)trackers[temp2].miss/(float)trackers[temp2].cycle_num) > ((float)trackers[temp2+1].miss/(float)trackers[temp2+1].cycle_num)) {
-    			ip_tracker_t temp_struct = trackers[temp2];
+            if(trackers[temp2].cycle_num > trackers[temp2 + 1].cycle_num) {
+                ip_tracker_t temp_struct = trackers[temp2];
     			trackers[temp2] = trackers[temp2+1];
     			trackers[temp2+1] = temp_struct;
     			
@@ -142,13 +160,35 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     			} else if((temp2+1) == tracker_index) {
     				tracker_index = temp2;
     			}
+            }
+        }
+    }
+    
+    //put 50 most common in MPC array
+    for(temp = 0; temp<COMMON_COUNT; temp++) {
+        MPC[temp] = trackers[IP_TRACKER_COUNT-COMMON_COUNT+temp];
+    }
+    
+    //the least common element in the MPC array;
+    int least_common_common = MPC[0].cycle_num;
+    
+    //sort MPC array by MPC
+    for(temp = 0; temp<COMMON_COUNT; temp++) {
+    	for(temp2 = 0; temp2<(COMMON_COUNT-temp); temp2++) {
+    		if( ((float)MPC[temp2].miss/(float)MPC[temp2].cycle_num) > ((float)MPC[temp2+1].miss/(float)MPC[temp2+1].cycle_num)) {
+    			ip_tracker_t temp_struct = MPC[temp2];
+    			MPC[temp2] = MPC[temp2+1];
+    			MPC[temp2+1] = temp_struct;
+    			}
     		}
     	}
     }
     
-    int percent = 100;
-    int prefetch_low = 5;
+    int percent1 = 50;
+    int prefetch_low = 1;
+    int prefetch_standard = 5;
     int prefetch_high = 10;
+    
     char line[80];
     
     FILE *fd;
@@ -163,23 +203,34 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 
     //printf("Line: %s\n", line);
     //convert line of text to data
-    percent = (line[0]-'0')*100 + (line[1]-'0')*10+(line[2]-'0');
+    percent1 = (line[0]-'0')*100 + (line[1]-'0')*10+(line[2]-'0');
     prefetch_low = (line[4]-'0')*10+(line[5]-'0');
-    prefetch_high = (line[7]-'0')*10+(line[8]-'0');
+    prefetch_standard = (line[7]-'0')*10+(line[8]-'0');
+    prefetch_high = (line[10]-'0')*10+(line[11]-'0');
     //printf("Percent: %d\n", percent);
     //printf("P_low: %d\n", prefetch_low);
     //printf("P_high: %d\n", prefetch_high);
     
     int prefetch_degree_used;
     //float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
-    float thresh;
-    thresh = ((float)(IP_TRACKER_COUNT)*percent)/100.0;
-    if(tracker_index < thresh) {
-         prefetch_degree_used = prefetch_low;
+    int thresh;
+    thresh = (int)(((float)(COMMON_COUNT)*percent)/100.0);
+    
+    //rare instruction
+    if(trackers[tracker_index].cycle_num < least_common_common) {
+         //if doing well
+         if((float)trackers[tracker_index].miss/(float)trackers[tracker_index].cycle_num < (float)trackers[tresh].miss/(float)trackers[thresh].cycle_num);
+            prefetch_degree_used = prefetch_low;
+         else
+            prefetch_degree_used = prefetch_standard;
     } else {
-        prefetch_degree_used = prefetch_high;
+        //if doing well
+        if((float)trackers[tracker_index].miss/(float)trackers[tracker_index].cycle_num < (float)trackers[tresh].miss/(float)trackers[thresh].cycle_num);
+            prefetch_degree_used = prefetch_standard;
+         else
+            prefetch_degree_used = prefetch_high;
     }
-    printf("%f\n%d\n%d\n", thresh, tracker_index, comp);
+    //printf("%f\n%d\n%d\n", thresh, tracker_index, comp);
   long long int stride = 0;
   if(addr > trackers[tracker_index].last_addr)
     {
