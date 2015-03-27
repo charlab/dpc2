@@ -169,8 +169,8 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     }
     //put 20 from the less common in (evenly spaced)
     for(temp = 0; temp<UNCOMMON; temp++) {
-        MPC[temp].miss = trackers[(int)((float)temp*((float)COMMON_COUNT-UNCOMMON/(float)UNCOMMON))].miss;
-        MPC[temp].cycle_num = trackers[(int)((float)temp*((float)COMMON_COUNT-UNCOMMON/(float)UNCOMMON))].cycle_num;
+        MPC[temp].miss = trackers[(int)((float)temp*(((float)COMMON_COUNT-UNCOMMON)/(float)UNCOMMON))].miss;
+        MPC[temp].cycle_num = trackers[(int)((float)temp*(((float)COMMON_COUNT-UNCOMMON)/(float)UNCOMMON))].cycle_num;
     }
     
     //the least common element in the MPC array;
