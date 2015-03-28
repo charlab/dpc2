@@ -28,7 +28,7 @@ NEWFILE="../data/"$TEST_PREFETCHER_NAME"_"$NOW".csv"
 
 # initial column headers for CSV file 
 # Order of flags here should match the order that they are run below
-echo "benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads,sum,threshold,low_degree,high_degree" >> $NEWFILE
+echo "benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads,sum,threshold,low_degree,standard_degree,high_degree" >> $NEWFILE
 
 gcc -Wall -o dpc2sim $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
 
@@ -44,7 +44,8 @@ while read currentLine;
   IFS=',' read -a currentLineElements <<< "$currentLine"
   THRESHOLD="${currentLineElements[0]}"
   LOW_DEGREE="${currentLineElements[1]}"
-  HIGH_DEGREE="${currentLineElements[2]}"
+  STANDARD_DEGREE="{currentLineElements[2]}"
+  HIGH_DEGREE="${currentLineElements[3]}"
 
 
 
@@ -85,6 +86,7 @@ while read currentLine;
     # Write the current settings to the csv file 
     echo -ne $THRESHOLD | sed -e "\$a," >> currentTrace
     echo -ne $LOW_DEGREE | sed -e "\$a," >> currentTrace
+    echo -ne $STANDARD_DEGREE | sed -e "\$a," >> currentTrace
     # No comma on the last line
     echo -ne $HIGH_DEGREE >> currentTrace
 
@@ -92,7 +94,7 @@ while read currentLine;
     # Clean up new lines in current trace run, append to end of file for the output file 
     # For each extra newline in currentTrace, increment NR%#?
     #Number of columns + 8
-    awk '{ ORS = (NR%19? "" : RS) } 1' currentTrace >> $NEWFILE
+    awk '{ ORS = (NR%21? "" : RS) } 1' currentTrace >> $NEWFILE
     rm currentTrace
     done 
 done <$CONFIG_FILE

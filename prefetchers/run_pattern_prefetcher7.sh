@@ -28,9 +28,9 @@ NEWFILE="../data/"$TEST_PREFETCHER_NAME"_"$NOW".csv"
 
 # initial column headers for CSV file 
 # Order of flags here should match the order that they are run below
-echo "benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads,sum,threshold,low_degree,high_degree" >> $NEWFILE
+echo "benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads,sum,threshold,low_degree,standard_degree,high_degree" >> $NEWFILE
 
-gcc -Wall -o dpc2sim7 $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
+gcc -Wall -o dpc2sim6 $TEST_PREFETCHER_LOCATION ../lib/dpc2sim.a
 
 # each configuration setting 
 while read currentLine;
@@ -44,7 +44,8 @@ while read currentLine;
   IFS=',' read -a currentLineElements <<< "$currentLine"
   THRESHOLD="${currentLineElements[0]}"
   LOW_DEGREE="${currentLineElements[1]}"
-  HIGH_DEGREE="${currentLineElements[2]}"
+  STANDARD_DEGREE="{currentLineElements[2]}"
+  HIGH_DEGREE="${currentLineElements[3]}"
 
 
 
@@ -63,16 +64,16 @@ while read currentLine;
 
     echo "Flag: NONE"
     # Each line: run executable, fetch last number, append, append to current file 
-    cat $trace | ./dpc2sim7 | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace7
+    cat $trace | ./dpc2sim6 | awk '{w=NF?$NF:w} END{print w}' |  sed -e "\$a," >> currentTrace7
 
     echo  "Flag: small_llc"
-    cat  $trace | ./dpc2sim7  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace7
+    cat  $trace | ./dpc2sim6  -small_llc | awk '{w=NF?$NF:w} END{print w}' | sed -e "\$a,">> currentTrace7
 
     echo "Flag: low_bandwidth"
-    cat  $trace | ./dpc2sim7  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace7
+    cat  $trace | ./dpc2sim6  -low_bandwidth | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace7
 
     echo  "Flag: scramble_loads"
-    cat $trace | ./dpc2sim7  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace7
+    cat $trace | ./dpc2sim6  -scramble_loads | awk '{w=NF?$NF:w} END{print w}'| sed -e "\$a," >> currentTrace7
 
     # Calculate the sum
     # Takes the currentTrace7 file, prints even lines (to get rid of commas)
@@ -85,6 +86,7 @@ while read currentLine;
     # Write the current settings to the csv file 
     echo -ne $THRESHOLD | sed -e "\$a," >> currentTrace7
     echo -ne $LOW_DEGREE | sed -e "\$a," >> currentTrace7
+    echo -ne $STANDARD_DEGREE | sed -e "\$a," >> currentTrace7
     # No comma on the last line
     echo -ne $HIGH_DEGREE >> currentTrace7
 
@@ -92,7 +94,7 @@ while read currentLine;
     # Clean up new lines in current trace run, append to end of file for the output file 
     # For each extra newline in currentTrace7, increment NR%#?
     #Number of columns + 8
-    awk '{ ORS = (NR%19? "" : RS) } 1' currentTrace7 >> $NEWFILE
+    awk '{ ORS = (NR%21? "" : RS) } 1' currentTrace7 >> $NEWFILE
     rm currentTrace7
     done 
 done <$CONFIG_FILE
