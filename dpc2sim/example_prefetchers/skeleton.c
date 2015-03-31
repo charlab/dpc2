@@ -30,3 +30,18 @@ void l2_cache_fill(int cpu_num, unsigned long long int addr, int set, int way, i
   // uncomment this line to see the information available to you when there is a cache fill event
   //printf("0x%llx %d %d %d 0x%llx\n", addr, set, way, prefetch, evicted_addr);
 }
+
+void l2_prefetcher_heartbeat_stats(int cpu_num)
+{
+  printf("Prefetcher heartbeat stats\n");
+}
+
+void l2_prefetcher_warmup_stats(int cpu_num)
+{
+  printf("Prefetcher warmup complete stats\n\n");
+}
+
+void l2_prefetcher_final_stats(int cpu_num)
+{
+  printf("Prefetcher final stats\n");
+}

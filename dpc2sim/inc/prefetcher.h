@@ -91,3 +91,10 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 // reconstruct a view of the contents of the L2 cache.
 // Using this function is optional.
 void l2_cache_fill(int cpu_num, unsigned long long int addr, int set, int way, int prefetch, unsigned long long int evicted_addr);
+
+// These functions are called with every stats heartbeat, when the warmup period is complete, and at the end of simulation, respectively.
+// You can use these functions to track stats specific to your prefetcher.  As with other functions, cpu_num will always be 0
+// in this competition.
+void l2_prefetcher_heartbeat_stats(int cpu_num);
+void l2_prefetcher_warmup_stats(int cpu_num);
+void l2_prefetcher_final_stats(int cpu_num);
