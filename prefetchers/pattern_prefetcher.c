@@ -30,27 +30,29 @@ typedef struct ip_tracker
   unsigned long long int ip;
 
   // the last address accessed by this IP
+  // this can be 58 bits since the bottom 6 bits are unused because of the block offset
   unsigned long long int last_addr;
+  
   // the stride between the last two addresses accessed by this IP
+  // this will be 24 bits
   long int last_stride;
 
+  //stream is never larger than 4 bits (0-8)
   long int stream;
 
-  long int stream_stride;
-  long int last_stream_stride;
-
   // use LRU to evict old IP trackers
-  unsigned long long int lru_cycle;
+  //this can be a 6 bit number since there are only 128 entries
+  unsigned long int lru_cycle;
 
     unsigned long int miss;
-    unsigned long long int cycle_num;
+    unsigned long int cycle_num;
 } ip_tracker_t;
 
 ip_tracker_t trackers[IP_TRACKER_COUNT];
 
 typedef struct common_counter {
     unsigned long int miss;
-    unsigned long long int cycle_num;
+    unsigned long int cycle_num;
 } common_counter_t;
 
 common_counter_t MPC[COMMON_COUNT];
@@ -69,8 +71,6 @@ void l2_prefetcher_initialize(int cpu_num)
         trackers[i].last_stride = 0;
         trackers[i].lru_cycle = 0;
         trackers[i].stream = 0;
-        trackers[i].stream_stride = 0;
-        trackers[i].last_stream_stride = 0;
         trackers[i].miss = 0;
         trackers[i].cycle_num = 0;
         if(i < COMMON_COUNT) {
@@ -188,38 +188,16 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     }
 
     
-    int percent = 50;
+    int percent = 30;
     int prefetch_low = 1;
-    int prefetch_standard = 5;
-    int prefetch_high = 10;
-    
-    char line[80];
-    
-    FILE *fd;
-    fd = fopen("test_line.csv", "rt");
-    long int elapsed_seconds;
-    while(fgets(line, 80, fd) != NULL)
-   {
-	 /* get a line, up to 80 chars from fd.  done if NULL */
-	 sscanf (line, "%ld", &elapsed_seconds);
-   }
-   fclose(fd);  /* close the file prior to exiting the routine */
-
-    //printf("Line: %s\n", line);
-    //convert line of text to data
-    percent = (line[0]-'0')*100 + (line[1]-'0')*10+(line[2]-'0');
-    prefetch_low = (line[4]-'0')*10+(line[5]-'0');
-    prefetch_standard = (line[7]-'0')*10+(line[8]-'0');
-    prefetch_high = (line[10]-'0')*10+(line[11]-'0');
-    //printf("Percent: %d\n", percent);
-    //printf("P_low: %d\n", prefetch_low);
-    //printf("P_high: %d\n", prefetch_high);
+    int prefetch_standard = 4;
+    int prefetch_high = 8;
     
     int prefetch_degree_used;
-    //float MPC = (float)trackers[tracker_index].miss / trackers[tracker_index].cycle_num;
+    
     int thresh;
     thresh = (COMMON_COUNT - 1)*((float)percent/100.0);
-    //printf("\n%d\n", thresh);
+    
     //rare instruction
     if(trackers[tracker_index].cycle_num < least_common_common) {
          //if doing well
@@ -245,6 +223,11 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
       stride = trackers[tracker_index].last_addr - addr;
       stride *= -1;
     }
+  
+  //make sure that stride is 24 bits
+  if(stride>>24 > 0) {
+	printf("Stride exceeds space constraint");
+  }
 
   // don't do anything if we somehow saw the same address twice in a row
   if(stride == 0)
@@ -257,8 +240,6 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
   if(stride == trackers[tracker_index].last_stride)
     {
       // do some prefetching
-      
-	
       int i, j;
       int k = 0;
 		
