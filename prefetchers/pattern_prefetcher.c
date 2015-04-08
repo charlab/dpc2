@@ -1,7 +1,8 @@
 //
 // Data Prefetching Championship Simulator 2
-// Seth Pugsley, seth.h.pugsley@intel.com
-//
+// Original code by: Seth Pugsley, seth.h.pugsley@intel.com
+// Modified by Sebastian Krupa, Jean Sung, Andrew Fishberg, Josef Spjut
+// Paper #7
 
 /*
 
