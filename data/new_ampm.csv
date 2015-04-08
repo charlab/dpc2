@@ -1,0 +1,10 @@
+A,ampm_lite_prefetcher,1.847872,1.760217,1.394252,1.853164
+B,ampm_lite_prefetcher,1.845368,1.754311,1.396806,1.841293
+gcc_trace2,ampm_lite_prefetcher,0.310416,0.308576,0.177316,0.309429
+GemsFDTD_trace2,ampm_lite_prefetcher,3.300108,3.300108,3.275035,3.201842
+lbm_trace2,ampm_lite_prefetcher,1.545331,1.349003,0.920716,1.525312
+leslie3d_trace2,ampm_lite_prefetcher,0.856729,0.797234,0.635534,0.843303
+libquantum_trace2,ampm_lite_prefetcher,3.270776,3.270776,3.150560,3.277350
+mcf_trace2,ampm_lite_prefetcher,0.367119,0.242557,0.222575,0.370201
+milc_trace2,ampm_lite_prefetcher,1.478170,1.416061,0.607796,1.476242
+omnetpp_trace2,ampm_lite_prefetcher,2.276288,1.529286,1.834017,2.207998
