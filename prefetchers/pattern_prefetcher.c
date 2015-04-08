@@ -17,12 +17,13 @@
 #include "../inc/prefetcher.h"
 
 #define IP_TRACKER_COUNT 128
-#define PREFETCH_DEGREE 5
-#define PREFETCH_DEGREE_HIGH 10
-#define THRESHOLD 0.92
+#define PREFETCH_DEGREE_LOW 1
+#define PREFETCH_DEGREE 4
+#define PREFETCH_DEGREE_HIGH 8
+#define THRESHOLD 30
 #define STREAM_DEPTH 2
 #define COMMON_COUNT 70
-#define UNCOMMON 10
+#define UNCOMMON 20
 
 typedef struct ip_tracker
 {
@@ -34,22 +35,28 @@ typedef struct ip_tracker
   unsigned long long int last_addr;
   
   // the stride between the last two addresses accessed by this IP
-  // this will be 24 bits
+  // this will be 6 bits since the bottom 6 bits are unused because of the block offset
+  // and the top 20 bits are unneccessary since we don't prefetch across pages
   long int last_stride;
 
-  //stream is never larger than 4 bits (0-8)
+  //stream is never larger than 5 bits (-8 to 8)
   long int stream;
 
   // use LRU to evict old IP trackers
   //this can be a 6 bit number since there are only 128 entries
   unsigned long int lru_cycle;
+    
+  // the number of times this instruction has missed
+  unsigned long int miss;
 
-    unsigned long int miss;
-    unsigned long int cycle_num;
+  // the number of times this instruction has been called
+  unsigned long int cycle_num;
 } ip_tracker_t;
 
 ip_tracker_t trackers[IP_TRACKER_COUNT];
 
+// this struct keeps track of the miss rate of common instructions only
+// this struct is not strictly necessary but helps with run time
 typedef struct common_counter {
     unsigned long int miss;
     unsigned long int cycle_num;
@@ -63,6 +70,7 @@ void l2_prefetcher_initialize(int cpu_num)
   // you can inspect these knob values from your code to see which configuration you're runnig in
   printf("Knobs visible from prefetcher: %d %d %d\n", knob_scramble_loads, knob_small_llc, knob_low_bandwidth);
 	
+  //make sure to initialize all variables within struct to 0
   int i;
   for(i=0; i<IP_TRACKER_COUNT; i++)
     {
@@ -88,7 +96,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
   // check for a tracker hit
   int tracker_index = -1;
 
-
+  //see if currently called instruction is already being tracked
   int i;
   for(i=0; i<IP_TRACKER_COUNT; i++)
     {
@@ -106,6 +114,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
       int lru_index=0;
       unsigned long long int lru_cycle = trackers[lru_index].lru_cycle;
       int i;
+      // evict least recently used instruction
       for(i=0; i<IP_TRACKER_COUNT; i++)
         {
           if(trackers[i].lru_cycle < lru_cycle)
@@ -123,28 +132,20 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
       trackers[tracker_index].last_stride = 0;
       trackers[tracker_index].lru_cycle = get_current_cycle(0);
       trackers[tracker_index].stream = 0;
-      trackers[tracker_index].stream_stride = 0;
-      trackers[tracker_index].last_stream_stride = 0;
         trackers[tracker_index].miss = 0;
         trackers[tracker_index].cycle_num = 0;
 
       return;
     }
-    //fprintf(stderr, "%ld\n",trackers[tracker_index].stream);
-  // calculate the stride between the current address and the last address
-  // this bit appears overly complicated because we're calculating
-  // differences between unsigned address variables
+
+    //increment cycles and misses if necessary
     trackers[tracker_index].miss += (1-cache_hit);
     trackers[tracker_index].cycle_num += 1;
-    
-    //printf("MISSES_PER_CYCLE: %f\n", MPC);
-    //printf("Misses: %ld\nCycles: %lld\n\n", trackers[tracker_index].miss,trackers[tracker_index].cycle_num);
 
-    
+    // temporary variables for bubble sort
     int temp, temp2;
    
-    //really bad bubble sort algorithm, but we can't write other functions so this is easiest to do
-    //sort by cycles then keep top 50 elements
+    // bubble sort by cycles then keep top 50 elements
     for(temp = 0; temp<IP_TRACKER_COUNT; temp++) {
     	for(temp2 = 0; temp2<(IP_TRACKER_COUNT-temp-1); temp2++) {
             if(trackers[temp2].cycle_num > trackers[temp2 + 1].cycle_num) {
@@ -162,18 +163,19 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
         }
     }
     
-    //put 30 most common in MPC array
+    //put 50 most common in MPC array
     for(temp = UNCOMMON; temp<COMMON_COUNT; temp++) {
         MPC[temp].miss = trackers[IP_TRACKER_COUNT-COMMON_COUNT+temp].miss;
         MPC[temp].cycle_num = trackers[IP_TRACKER_COUNT-COMMON_COUNT+temp].cycle_num;
     }
+
     //put 20 from the less common in (evenly spaced)
     for(temp = 0; temp<UNCOMMON; temp++) {
         MPC[temp].miss = trackers[(int)((float)temp*(((float)COMMON_COUNT-UNCOMMON)/(float)UNCOMMON))].miss;
         MPC[temp].cycle_num = trackers[(int)((float)temp*(((float)COMMON_COUNT-UNCOMMON)/(float)UNCOMMON))].cycle_num;
     }
     
-    //the least common element in the MPC array;
+    //the least common element in the MPC array
     long int least_common_common = MPC[UNCOMMON].cycle_num;
     
     //sort MPC array by MPC
@@ -188,13 +190,14 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
     }
 
     
-    int percent = 30;
-    int prefetch_low = 1;
-    int prefetch_standard = 4;
-    int prefetch_high = 8;
+    int percent = THRESHOLD;
+    int prefetch_low = PREFETCH_DEGREE_LOW;
+    int prefetch_standard = PREFETCH_DEGREE;
+    int prefetch_high = PREFETCH_DEGREE_HIGH;
     
     int prefetch_degree_used;
     
+    // convert the percentage threshold int an index
     int thresh;
     thresh = (COMMON_COUNT - 1)*((float)percent/100.0);
     
@@ -205,14 +208,15 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
             prefetch_degree_used = prefetch_low;
          else
             prefetch_degree_used = prefetch_standard;
-    } else {
+    } else { //common instruction
         //if doing well
         if((float)trackers[tracker_index].miss/(float)trackers[tracker_index].cycle_num < (float)trackers[thresh].miss/(float)trackers[thresh].cycle_num)
             prefetch_degree_used = prefetch_standard;
          else
             prefetch_degree_used = prefetch_high;
     }
-    //printf("%f\n%d\n%d\n", thresh, tracker_index, comp);
+  
+  //calculate the stride
   long long int stride = 0;
   if(addr > trackers[tracker_index].last_addr)
     {
@@ -224,11 +228,6 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
       stride *= -1;
     }
   
-  //make sure that stride is 24 bits
-  if(stride>>24 > 0) {
-	printf("Stride exceeds space constraint");
-  }
-
   // don't do anything if we somehow saw the same address twice in a row
   if(stride == 0)
     {
@@ -239,21 +238,28 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
   // stride more than once
   if(stride == trackers[tracker_index].last_stride)
     {
-      // do some prefetching
       int i, j;
       int k = 0;
-		
+	
+      // if there is a stream along with the stride	first stream up to 2 lines
+      // of data then stride, follow this up with more stream
       if(trackers[tracker_index].stream > 0) {
 	      for(j=0, k=0; k<=prefetch_degree_used; j++) {
 
 			for(i=0; i<=trackers[tracker_index].stream; i++) {
 				k++;
 				
+                //make sure we are not prefetching too much
 				if(k>prefetch_degree_used)
 				  break;
+
+                //make sure we are not streaming too much
                 if(i>STREAM_DEPTH)
                   break;
 
+                //calculate the adress we want to prefetch
+                //j is the number of strides we have made
+                //i is the number of streams
 				unsigned long long int pf_address = addr + ((j+1)*stride);
 				pf_address = ((pf_address>>6) + i)<<6;
 
@@ -273,7 +279,7 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 				
 			  }
 			}
-	} else {
+	 } else { //stream <= 0
 	    for(j=0, k=0; k<=prefetch_degree_used; j++) {
 			for(i=0; i>=trackers[tracker_index].stream; i--)
 			  {
@@ -306,12 +312,15 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
 		}
 	}
 
-    } else if((addr>>6) == ((trackers[tracker_index].last_addr>>6) + 1)) {
-        stride = trackers[tracker_index].last_stride; //dont want to override stride if streaming
+    // there is no stride pattern, so stream only
+  } else if((addr>>6) == ((trackers[tracker_index].last_addr>>6) + 1)) {
+        // dont want to override stride if streaming
+        stride = trackers[tracker_index].last_stride; 
+        
+        //if it was going in the other direction earlier, reset it
         if(trackers[tracker_index].stream < 0)
             trackers[tracker_index].stream = 0;
-        trackers[tracker_index].stream += 1;
-        
+        trackers[tracker_index].stream += 1;     
 
 	    for(i=0; i<trackers[tracker_index].stream; i++) {
 		    unsigned long long int pf_address = addr + (i*64);
@@ -337,11 +346,14 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
                   }
 	    }
     } else if((addr>>6) == ((trackers[tracker_index].last_addr>>6) - 1)) {
-        stride = trackers[tracker_index].last_stride; //dont want to override stride if streaming
+        //dont want to override stride if streaming
+        stride = trackers[tracker_index].last_stride; 
+        
         if(trackers[tracker_index].stream > 0)
             trackers[tracker_index].stream = 0;
         trackers[tracker_index].stream -= 1;
-	    for(i=0; i>trackers[tracker_index].stream; i--) {
+	    
+        for(i=0; i>trackers[tracker_index].stream; i--) {
 		    unsigned long long int pf_address = addr + (i*64);
 
                 if((-1*i)>prefetch_degree_used)
@@ -365,7 +377,8 @@ void l2_prefetcher_operate(int cpu_num, unsigned long long int addr, unsigned lo
                   }
 	    }
     }
-    
+  
+  //store relevant values  
   trackers[tracker_index].last_addr = addr;
   trackers[tracker_index].last_stride = stride;
 }
