@@ -1,7 +1,18 @@
-Website for dpc2: [http://comparch-conf.gatech.edu/dpc2/](http://comparch-conf.gatech.edu/dpc2/)
+## DPC 2 Submission & extra data
 
-# Rules
+### About us
+Jean Sung, Sebastian Krupa, Andrew Fishberg, Josef Spjut <br>
+Harvey Mudd College
 
-The competition will proceed as follows. The contestant will be responsible for implementing and evaluating their algorithm in the distributed framework. The framework itself should not be modified (except for the prefetcher.c file that implements the prefetching algorithm). You may use **32 KBytes (256 Kbits)** of storage to implement state machines to manage your prefetching algorithm. You will not be penalized for the complexity of the algorithm logic. The 32 Kbyte storage can be allocated as you see fit. Submissions will be taken, and the contestant's prefetcher.c (this file only) will be compiled and run with the original version of the framework. The contestants will be ranked on the basis of the measured performance of their prefetching algorithms. Each contestant will get four scores, one for each of four configurations, that measure the geometric mean of their prefetching algorithm speedups across a set of (undistributed) benchmarks. The overall score is the sum of these four scores. For example, if a contestant has scores of 1.05, 1.03, 1.00 and 0.99 for the four configurations, his/her overall score is 4.07.
+Competition specifications:  [http://comparch-conf.gatech.edu/dpc2/](http://comparch-conf.gatech.edu/dpc2/)
 
-We have added several functions to help you build your prefetcher: `l2_cache_fill()`, `l2_get_set()` and `l2_get_way()`. The motivation for adding these functions was to facilitate the addition of metadata to each cache line in the L2 cache, by letting you determine which tag array entry corresponds to each incoming cache line, and each accessed cache line. The intent was never to give you a “free” way to check the contents of the L2 in an oracular manner. In line with this, please make sure to only call `l2_get_set()` and `l2_get_way()` a maximum of 1 time each in `l2_prefetcher_operate()`, and never anywhere else. Of course, the use of these functions is optional, but you may find them useful. The judges who review the code will be specifically looking for abuse of these functions.
+###  Contents
+This repository contains given material/examples, code we wrote for our prefetcher submission, shell scripts written and used to collect data, data gathered, and write ups.
+
+| directory | contents | 
+|:----------|:---------|
+| data | generated csv files from running prefetchers on traces, raw and processed data | 
+| dpc2sim | given infrastructure, previous prefetchers, and given traces, downloaded from [here](comparch-conf.gatech.edu/dpc2/simulation_infrastructure.html)|
+|  inc, lib | copied from given code to help prefetcher compile |
+| prefetchers | our prefetchers (both ideas) and scripts to run through prefetcher | 
+| traces | traces that our team has generated | 
