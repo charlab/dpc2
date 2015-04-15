@@ -1,9 +1,0 @@
-benchmark,prefetcher,noflags,small_llc,low_bandwidth,scramble_loads
-GemsFDTD_trace2,stream2_prefetcher,3.433524,3.433524,3.405717,3.417979
-gcc_trace2,stream2_prefetcher,0.274615,0.275575,0.14777,0.273933
-lbm_trace2,stream2_prefetcher,1.070127,1.009358,0.687233,1.061664
-leslie3d_trace2,stream2_prefetcher,1.034734,0.961026,0.622703,0.992652
-libquantum_trace2,stream2_prefetcher,3.178625,3.178625,2.954544,3.178478
-mcf_trace2,stream2_prefetcher,0.341374,0.233812,0.21409,0.344339
-milc_trace2,stream2_prefetcher,1.053876,0.998499,0.591736,1.036903
-omnetpp_trace2,stream2_prefetcher,2.213334,1.45233,1.83231,2.263791
