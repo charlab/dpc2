@@ -14,5 +14,6 @@ This repository contains given material/examples, code we wrote for our prefetch
 | data | generated csv files from running prefetchers on traces, raw and processed data | 
 | dpc2sim | given infrastructure, previous prefetchers, and given traces, downloaded from [here](comparch-conf.gatech.edu/dpc2/simulation_infrastructure.html)|
 |  inc, lib | copied from given code to help prefetcher compile |
-| prefetchers | our prefetchers (both ideas) and scripts to run through prefetcher | 
+| prefetchers | our final prefetcher |
+| shell scripts | scripts used to run through initial prefetchers, a given prefetcher and our specific prefetcher |  
 | traces | traces that our team has generated | 
